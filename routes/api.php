@@ -1,36 +1,30 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthorController;
-use App\Http\Controllers\GenreController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TransactionController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes (Dapat diakses publik tanpa login)
-|--------------------------------------------------------------------------
-*/
-// Public route Author (hanya index & show)
-Route::get('/authors', [AuthorController::class, 'index']);
-Route::get('/authors/{id}', [AuthorController::class, 'show']);
+// 1. Public Routes (Auth)
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
-// Public route Genre (hanya index & show)
-Route::get('/genres', [GenreController::class, 'index']);
-Route::get('/genres/{id}', [GenreController::class, 'show']);
-
-
-/*
-|--------------------------------------------------------------------------
-| Protected Routes (Hanya dapat diakses oleh Admin / Membutuhkan Middleware Auth)
-|--------------------------------------------------------------------------
-*/
+// 2. Protected Routes (Harus Login / Punya Token Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
-    // Protected routes Author
-    Route::post('/authors', [AuthorController::class, 'store']);
-    Route::put('/authors/{id}', [AuthorController::class, 'update']);
-    Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
+    
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Protected routes Genre
-    Route::post('/genres', [GenreController::class, 'store']);
-    Route::put('/genres/{id}', [GenreController::class, 'update']);
-    Route::delete('/genres/{id}', [GenreController::class, 'destroy']);
+    // --- FITUR TRANSAKSI ---
+
+    // Akses Customer (Create, Update, Show)
+    Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::put('/transactions/{id}', [TransactionController::class, 'update']);
+    Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+
+    // Akses Admin (Read All & Destroy)
+    Route::middleware('can:admin')->group(function () { 
+        // Catatan: Jika menggunakan Gate/Middleware 'can:admin' atau 'role:admin'
+        Route::get('/transactions', [TransactionController::class, 'index']);
+        Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
+    });
 });
